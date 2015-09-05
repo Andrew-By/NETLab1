@@ -69,7 +69,8 @@ namespace NETLab1Client
                 IPHostEntry hostEntry = Dns.GetHostEntry(ServerTextBox.Text);
                 IPEndPoint endPoint = new IPEndPoint(hostEntry.AddressList[0], int.Parse(PortTextBox.Text));
                 socket.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/nick " + NickTextBox.Text))), endPoint);
-                NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
+                socket.Close();
+                //NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }
             catch(Exception ex)
             {

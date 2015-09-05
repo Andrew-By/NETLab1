@@ -18,7 +18,7 @@ namespace NETLab1Server
         List<Socket> listeners;
         Thread serverTh;
         List<Thread> threads;
-        const int port = 27000;
+        const int port = 4501;
         const int buffSize = 2048;
         bool paused = false;
         ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
@@ -37,8 +37,8 @@ namespace NETLab1Server
             threads = new List<Thread>();
             //permission = new SocketPermission(NetworkAccess.Accept, TransportType.Udp, "", port);
             //permission.Demand();
-            server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            server.Bind(new IPEndPoint(IPAddress.Any, port));
+            server = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+            server.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
             server.Blocking = true;
             /*while (true)
             {
