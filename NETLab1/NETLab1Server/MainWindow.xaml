@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NETLab1Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="ServerPage" Height="350" Width="525">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -23,11 +23,12 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox IsEnabled="False" />
-            <Button Grid.Column="1">Запуск</Button>
-            <Button Grid.Column="2">Остановка</Button>
+            <Button Name="Launch" Click="Launch_Click" Margin="288,0,85,0">Запуск</Button>
+            <Button Grid.Column="2" Name="Stop" Click="Stop_Click" IsEnabled="False">Остановка</Button>
+            <Button x:Name="Pause" HorizontalAlignment="Left" Margin="375,0,0,0" VerticalAlignment="Top" Width="75" Click="Pause_Click" IsEnabled="False">Пауза</Button>
         </Grid>
-        <TextBlock Grid.Row="1" />
-        <ListView Grid.Column="1" Grid.Row="1">
+        <TextBlock Grid.Row="1" Name="MessageArea" TextWrapping="Wrap"/>
+        <ListView Grid.Column="1" Grid.Row="1" Name="UserList">
             <ListView.Items>
                 <TextBlock Text="18Wheeler" />
                 <TextBlock Text="Solo" />
