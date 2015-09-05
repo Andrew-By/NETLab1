@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NETLab1;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,10 @@ namespace NETLab1Client
         public ChatPage()
         {
             InitializeComponent();
+        }
+
+        private async void SendButton_Click(object sender, RoutedEventArgs e)
+        {
         }
     }
 }

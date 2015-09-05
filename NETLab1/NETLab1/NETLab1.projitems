@@ -16,6 +16,8 @@
     <Import_RootNamespace>NETLab1</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ConfirmationMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\TextMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UDPSocket.cs" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
-﻿using NETLab1.Models;
+﻿using NETLab1;
+using NETLab1.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,7 @@ namespace NETLab1Client
         public ConnectPage()
         {
             InitializeComponent();
+            ConnectingProgressBar.Visibility = Visibility.Hidden;
             EnableValidation = true;
             ValidateInput();
         }
@@ -61,20 +63,28 @@ namespace NETLab1Client
             ValidateInput();
         }
 
-        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        private async void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
+            ServerTextBox.IsEnabled = false;
+            PortTextBox.IsEnabled = false;
+            NickTextBox.IsEnabled = false;
+            ConnectButton.IsEnabled = false;
+            ConnectingProgressBar.Visibility = Visibility.Visible;
+
+            UDPSocket socket = new UDPSocket();
             try
             {
-                Socket socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
-                IPHostEntry hostEntry = Dns.GetHostEntry(ServerTextBox.Text);
-                IPEndPoint endPoint = new IPEndPoint(hostEntry.AddressList[0], int.Parse(PortTextBox.Text));
-                socket.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/nick " + NickTextBox.Text))), endPoint);
-                socket.Close();
-                //NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
+                await socket.SendMessageAsync(ServerTextBox.Text, int.Parse(PortTextBox.Text), "/nick " + NickTextBox.Text);
+                NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message, "Ошибка подключения", MessageBoxButton.OK, MessageBoxImage.Error);
+                ServerTextBox.IsEnabled = true;
+                PortTextBox.IsEnabled = true;
+                NickTextBox.IsEnabled = true;
+                ConnectButton.IsEnabled = true;
+                ConnectingProgressBar.Visibility = Visibility.Hidden;
+                MessageBox.Show("Не удалось подключиться к серверу", "Произошла ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,6 +10,7 @@ namespace NETLab1.Models
     /// </summary>
     public class TextMessage
     {
+        [JsonConstructor]
         public TextMessage(string text, string recipient)
         {
             this.Text = text;
@@ -37,6 +39,10 @@ namespace NETLab1.Models
         /// </summary>
         public DateTime SentTime { get; set; }
 
+        public string Hash
+        {
+            get { return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text)); }
+        }
         public override string ToString()
         {
             return Text;

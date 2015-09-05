@@ -39,7 +39,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox />
-            <Button Grid.Column="1">Отправить</Button>
+            <Button Name="SendButton" Grid.Column="1" Click="SendButton_Click">Отправить</Button>
         </Grid>
     </Grid>
 </Page>

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using NETLab1.Models;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -57,11 +59,15 @@ namespace NETLab1Server
             while (_shutdownEvent.WaitOne(Timeout.Infinite)) ;
         }
 
-        private void Listen(Socket sender)
+        private void Listen(Socket s)
         {
             int bytesRec;
             byte[] buffer = new byte[buffSize];
             String data;
+
+            IPEndPoint sender = new IPEndPoint(IPAddress.IPv6Any, 0);
+            EndPoint senderRemote = (EndPoint)sender;
+
             while (true)
             {
                 _pauseEvent.WaitOne(Timeout.Infinite);
@@ -70,12 +76,19 @@ namespace NETLab1Server
                 data = String.Empty;
                 try
                 {
-                    while ((bytesRec = sender.Receive(buffer)) > 0)
+                    while(true)
+                    {
+                        bytesRec = s.ReceiveFrom(buffer, ref senderRemote);
                         data += Encoding.UTF8.GetString(buffer, 0, bytesRec);
+                        if (data.ToString().IndexOf('}') > -1)
+                            break;
+                    }
                 }
                 catch (SocketException) { }
                 Thread.Sleep(100);
-                Dispatcher.BeginInvoke(new Action(() => MessageArea.Text += "\n" + DateTime.Now.ToString() + " - " + data.TrimEnd('\n')));
+                TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
+                Dispatcher.BeginInvoke(new Action(() => MessageArea.Text += String.Format("\n {0} {1}: {2}", DateTime.Now, message.Recipient, message.Text)));
+                s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new ConfirmationMessage(message.Hash, true))), senderRemote);
                 Thread.Sleep(100);
             }
         }
