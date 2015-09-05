@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NETLab1;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -13,5 +14,6 @@ namespace NETLab1Client
     /// </summary>
     public partial class App : Application
     {
+        public static UDPSocket Socket;
     }
 }

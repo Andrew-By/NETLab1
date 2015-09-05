@@ -87,7 +87,7 @@ namespace NETLab1Server
                 catch (SocketException) { }
                 Thread.Sleep(100);
                 TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
-                Dispatcher.BeginInvoke(new Action(() => MessageArea.Text += String.Format("\n {0} {1}: {2}", DateTime.Now, message.Recipient, message.Text)));
+                Dispatcher.BeginInvoke(new Action(() => MessageArea.Text += String.Format("\n {0} {1}: {2}", DateTime.Now, message.To, message.Text)));
                 s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new ConfirmationMessage(message.Hash, true))), senderRemote);
                 Thread.Sleep(100);
             }

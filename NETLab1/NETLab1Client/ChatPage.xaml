@@ -1,4 +1,5 @@
 ﻿<Page x:Class="NETLab1Client.ChatPage"
+      Name="Root"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -26,7 +27,22 @@
             <TextBox />
             <Button Grid.Column="1">Соединение</Button>
         </Grid>
-        <TextBlock Name="HistoryTextBlock" Grid.Row="1" />
+        <ListView Name="HistoryTextBlock" Grid.Row="1" ItemsSource="{Binding History, ElementName=Root}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding From}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Text}" />
+                        <TextBlock Grid.Column="2" Text="{Binding SentTime}" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
         <ListView Grid.Column="1" Grid.Row="1">
             <ListView.Items>
                 <TextBlock Text="18Wheeler" />
@@ -38,7 +54,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox />
+            <TextBox Name="MessageTextBox" />
             <Button Name="SendButton" Grid.Column="1" Click="SendButton_Click">Отправить</Button>
         </Grid>
     </Grid>

@@ -71,14 +71,15 @@ namespace NETLab1Client
             ConnectButton.IsEnabled = false;
             ConnectingProgressBar.Visibility = Visibility.Visible;
 
-            UDPSocket socket = new UDPSocket();
+            App.Socket = new UDPSocket(ServerTextBox.Text, int.Parse(PortTextBox.Text), NickTextBox.Text);
             try
             {
-                await socket.SendMessageAsync(ServerTextBox.Text, int.Parse(PortTextBox.Text), "/nick " + NickTextBox.Text);
+                await App.Socket.SendMessageAsync("/nick " + NickTextBox.Text);
                 NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }
             catch(Exception ex)
             {
+                App.Socket.Close();
                 ServerTextBox.IsEnabled = true;
                 PortTextBox.IsEnabled = true;
                 NickTextBox.IsEnabled = true;

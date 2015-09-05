@@ -31,24 +31,45 @@ namespace NETLab1
         private const int MAX_BUFF_SIZE = 2048;
 
         /// <summary>
+        /// Сокет, с помощью устанавливаются все соединения
+        /// </summary>
+        private Socket _socket;
+
+        /// <summary>
+        /// Адрес удалённого компьютера
+        /// </summary>
+        private IPEndPoint _endPoint;
+
+        private String _nick;
+        /// <summary>
+        /// Ник пользователя
+        /// </summary>
+        public String Nick
+        {
+            get { return _nick; }
+        }
+        public UDPSocket(String toServer, int toPort, string nick)
+        {
+            IPHostEntry hostEntry = Dns.GetHostEntry(toServer);
+            _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
+            _endPoint = new IPEndPoint(hostEntry.AddressList[0], toPort);
+            _nick = nick;
+        }
+
+        /// <summary>
         /// Отправка сообщения по протоколу UDP
         /// </summary>
         /// <param name="toServer">Адрес или имя сервера</param>
         /// <param name="toPort">Порт</param>
         /// <param name="text">Текст сообщения</param>
-        public async Task SendMessageAsync(String toServer, int toPort, String text)
+        public async Task SendMessageAsync(String text)
         {
             try
             {
-
-                Socket socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
-                IPHostEntry hostEntry = Dns.GetHostEntry(toServer);
-                IPEndPoint endPoint = new IPEndPoint(hostEntry.AddressList[0], toPort);
-                TextMessage message = new TextMessage(text);
-
+                TextMessage message = new TextMessage(text, _nick);
                 Debug.WriteLine("Отправка сообщения {0}...", message.Hash);
 
-                await DeliverMessageAsync(socket, endPoint, message);
+                await DeliverMessageAsync(message);
             }
             catch
             {
@@ -56,7 +77,7 @@ namespace NETLab1
             }
         }
 
-        private async Task DeliverMessageAsync(Socket socket, EndPoint endPoint, TextMessage message)
+        private async Task DeliverMessageAsync(TextMessage message)
         {
             bool delivered = false;
 
@@ -65,10 +86,10 @@ namespace NETLab1
                 for (int i = 0; i < MAX_RETRY_COUNT; i++)
                 {
                     Debug.WriteLine("Попытка {0} из {1}...", i + 1, MAX_RETRY_COUNT);
-                    socket.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), endPoint);
+                    _socket.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), _endPoint);
                     Debug.WriteLine("Сообщение {0} отправлено, ожидается подтверждение...", message.Hash);
 
-                    Task confirmation = new Task(() => WaitForConfirmation(socket, message.Hash));
+                    Task confirmation = new Task(() => WaitForConfirmation(_socket, message.Hash));
                     confirmation.Start();
                     if (confirmation.Wait(MAX_RETRY_TIMEOUT))
                     {
@@ -118,5 +139,9 @@ namespace NETLab1
             while (cmessage == null || !(cmessage.MessageHash == messageHash && cmessage.Accepted));
         }
 
+        public void Close()
+        {
+            _socket.Close();
+        }
     }
 }

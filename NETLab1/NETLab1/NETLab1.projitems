@@ -20,4 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\TextMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UDPSocket.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)ViewModels\" />
+  </ItemGroup>
 </Project>

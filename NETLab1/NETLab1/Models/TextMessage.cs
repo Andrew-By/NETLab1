@@ -11,16 +11,18 @@ namespace NETLab1.Models
     public class TextMessage
     {
         [JsonConstructor]
-        public TextMessage(string text, string recipient)
+        public TextMessage(string text, string to, string from)
         {
             this.Text = text;
-            this.Recipient = recipient;
+            this.To = to;
+            this.From = from;
             this.SentTime = DateTime.Now;
         }
 
-        public TextMessage(string text)
+        public TextMessage(string text, string from)
         {
             this.Text = text;
+            this.From = from;
             this.SentTime = DateTime.Now;
         }
 
@@ -32,13 +34,21 @@ namespace NETLab1.Models
         /// <summary>
         /// Ник получателя (или null, если всем)
         /// </summary>
-        public string Recipient { get; set; }
+        public string To { get; set; }
+
+        /// <summary>
+        /// Ник отправителя
+        /// </summary>
+        public string From { get; set; }
 
         /// <summary>
         /// Время отправки сообщения
         /// </summary>
         public DateTime SentTime { get; set; }
 
+        /// <summary>
+        /// Контрольная сумма сообщения
+        /// </summary>
         public string Hash
         {
             get { return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text)); }
