@@ -54,6 +54,7 @@ namespace NETLab1Server
             }*/
             Thread th = new Thread(() => Listen(server));
             th.Start();
+            while (_shutdownEvent.WaitOne(Timeout.Infinite)) ;
         }
 
         private void Listen(Socket sender)
