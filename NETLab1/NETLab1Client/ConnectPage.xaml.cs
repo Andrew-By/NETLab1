@@ -1,6 +1,9 @@
-﻿using System;
+﻿using NETLab1.Models;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,10 +63,12 @@ namespace NETLab1Client
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            Socket socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
             try
             {
-                socket.Connect(ServerTextBox.Text, int.Parse(PortTextBox.Text));
+                Socket socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
+                IPHostEntry hostEntry = Dns.GetHostEntry(ServerTextBox.Text);
+                IPEndPoint endPoint = new IPEndPoint(hostEntry.AddressList[0], int.Parse(PortTextBox.Text));
+                socket.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/nick " + NickTextBox.Text))), endPoint);
                 NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }
             catch(Exception ex)

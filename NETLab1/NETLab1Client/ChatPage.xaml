@@ -26,7 +26,7 @@
             <TextBox />
             <Button Grid.Column="1">Соединение</Button>
         </Grid>
-        <TextBlock Grid.Row="1" />
+        <TextBlock Name="HistoryTextBlock" Grid.Row="1" />
         <ListView Grid.Column="1" Grid.Row="1">
             <ListView.Items>
                 <TextBlock Text="18Wheeler" />
