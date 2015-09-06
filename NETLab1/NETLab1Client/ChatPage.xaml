@@ -27,21 +27,30 @@
             <TextBox />
             <Button Grid.Column="1">Соединение</Button>
         </Grid>
-        <ListView Name="HistoryTextBlock" Grid.Row="1" ItemsSource="{Binding History, ElementName=Root}">
+        <ListView Name="HistoryListView" Grid.Row="1" ItemsSource="{Binding History, ElementName=Root}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding From}" />
-                        <TextBlock Grid.Column="1" Text="{Binding Text}" />
-                        <TextBlock Grid.Column="2" Text="{Binding SentTime}" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding From}" FontStyle="Italic" />
+                            <TextBlock Text=":" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" />
+                        <TextBlock Grid.Column="2" Text="{Binding SentTime}" Foreground="Gray" />
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
+
         </ListView>
         <ListView Grid.Column="1" Grid.Row="1">
             <ListView.Items>
