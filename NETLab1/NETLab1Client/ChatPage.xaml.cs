@@ -45,10 +45,7 @@ namespace NETLab1Client
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            TextMessage message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
-            History.Add(message);
-            MessageTextBox.Text = String.Empty;
-            await App.Socket.SendMessageAsync(message.Text);
+            await SendMessageAsync();
         }
 
         #region INotify
@@ -63,5 +60,19 @@ namespace NETLab1Client
             }
         }
         #endregion
+
+        private async void MessageTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                await SendMessageAsync();
+        }
+
+        private async Task SendMessageAsync()
+        {
+            TextMessage message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
+            History.Add(message);
+            MessageTextBox.Text = String.Empty;
+            await App.Socket.SendMessageAsync(message.Text);
+        }
     }
 }

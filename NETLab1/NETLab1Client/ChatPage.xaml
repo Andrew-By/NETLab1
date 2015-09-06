@@ -63,7 +63,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Name="MessageTextBox" />
+            <TextBox Name="MessageTextBox" KeyDown="MessageTextBox_KeyDown" />
             <Button Name="SendButton" Grid.Column="1" Click="SendButton_Click">Отправить</Button>
         </Grid>
     </Grid>
