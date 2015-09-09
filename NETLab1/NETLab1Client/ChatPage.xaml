@@ -24,8 +24,12 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox />
-            <Button Grid.Column="1">Соединение</Button>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock Text="{Binding ServerName, ElementName=Root}" FontSize="28"  Margin="5,5,0,0" />
+            <TextBlock Grid.Row="1" Text="{Binding ChatType, ElementName=Root}" Margin="5,0,0,0" />
         </Grid>
         <ListView Name="HistoryListView" Grid.Row="1" ItemsSource="{Binding History, ElementName=Root}">
             <ListView.ItemTemplate>

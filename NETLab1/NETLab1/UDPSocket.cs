@@ -51,6 +51,12 @@ namespace NETLab1
         /// </summary>
         private Dictionary<String, CancellationTokenSource> _pendingDelivery;
 
+        private String _serverName;
+        public String ServerName
+        {
+            get { return _serverName; }
+        }
+
         private String _nick;
         /// <summary>
         /// Ник пользователя
@@ -78,6 +84,7 @@ namespace NETLab1
         public UDPSocket(String toServer, int toPort, string nick)
         {
             IPHostEntry hostEntry = Dns.GetHostEntry(toServer);
+            _serverName = hostEntry.HostName;
             _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
             _socket.ReceiveTimeout = MAX_RETRY_TIMEOUT;
             _endPoint = new IPEndPoint(hostEntry.AddressList[0], toPort);

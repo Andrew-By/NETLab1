@@ -35,6 +35,16 @@ namespace NETLab1Client
                 UserList.Add(user);
         }
 
+        public String ServerName
+        {
+            get { return App.Socket.ServerName; }
+        }
+
+        public string ChatType
+        {
+            get { return "Общий чат"; }
+        }
+
         private ObservableCollection<TextMessage> _history = new ObservableCollection<TextMessage>();
         public ObservableCollection<TextMessage> History
         {
