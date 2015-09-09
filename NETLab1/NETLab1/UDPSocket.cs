@@ -66,6 +66,7 @@ namespace NETLab1
         public event EventHandler<TextMessage> TextMessageRecieved;
         public event EventHandler<TextMessage> MessageDelivered;
         public event EventHandler<TextMessage> DeliveryFailed;
+        public event EventHandler<List<String>> UserListUpdated;
 
         public UDPSocket(String toServer, int toPort, string nick)
         {
@@ -153,6 +154,10 @@ namespace NETLab1
                         case "message":
                             Debug.WriteLine("Получено текстовое сообщение!");
                             if (TextMessageRecieved != null) TextMessageRecieved(this, message);
+                            break;
+                        case "userlist":
+                            Debug.WriteLine("Получен список пользователей!");
+                            if (UserListUpdated != null) UserListUpdated(this, JsonConvert.DeserializeObject(message.Command.Value, typeof(List<String>)) as List<String>);
                             break;
                         default:
                             Debug.WriteLine("Получено сообщение неизвестного типа ({0})! Сообщение проигнорировано", message.Command.Key);

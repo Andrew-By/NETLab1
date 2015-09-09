@@ -28,6 +28,7 @@ namespace NETLab1Client
         {
             InitializeComponent();
             App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
+            App.Socket.UserListUpdated += Socket_UserListUpdated;
         }
 
         private ObservableCollection<TextMessage> _history = new ObservableCollection<TextMessage>();
@@ -44,12 +45,31 @@ namespace NETLab1Client
             }
         }
 
+        private ObservableCollection<String> _users = new ObservableCollection<String>();
+        public ObservableCollection<String> Users
+        {
+            get { return _users; }
+            set
+            {
+                if (value != _users)
+                {
+                    _users = value;
+                    NotifyPropertyChanged("Users");
+                }
+            }
+        }
+
         private void Socket_TextMessageRecieved(object sender, TextMessage e)
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 History.Add(e);
             }));
+        }
+
+        private void Socket_UserListUpdated(object sender, List<string> e)
+        {
+            Users = new ObservableCollection<string>(e);
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
