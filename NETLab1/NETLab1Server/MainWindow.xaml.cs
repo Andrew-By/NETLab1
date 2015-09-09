@@ -104,7 +104,8 @@ namespace NETLab1Server
                     Dispatcher.BeginInvoke(new Action(() => History.Add(message)));
                     foreach (var receiver in _receivers)
                     {
-                        if (receiver.Item1 != senderRemote)
+                        //if (receiver.Item1 != senderRemote)
+                        if (receiver.Item1 != _receivers.FirstOrDefault(x => x.Item2 == message.From).Item1)
                             SendMessage(message, receiver.Item1);
                     }
                 }
