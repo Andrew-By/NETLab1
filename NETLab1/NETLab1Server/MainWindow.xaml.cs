@@ -31,7 +31,6 @@ namespace NETLab1Server
         private ObservableCollection<TextMessage> _history = new ObservableCollection<TextMessage>();
         private ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
         private ManualResetEvent _pauseEvent = new ManualResetEvent(true);
-        private delegate void Listener(Socket sender);
 
         public class TupleList<T1, T2> : List<Tuple<T1, T2>>
         {
@@ -53,11 +52,11 @@ namespace NETLab1Server
             _server = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
             _server.Bind(new IPEndPoint(IPAddress.IPv6Any, _port));
             _server.Blocking = true;
-            _serverTh = new Thread(() => Listen(_server));
+            _serverTh = new Thread(() => Listen());
             _serverTh.Start();
         }
 
-        private void Listen(Socket s)
+        private void Listen()
         {
             int bytesRec;
             byte[] buffer = new byte[_buffSize];
@@ -65,7 +64,7 @@ namespace NETLab1Server
 
             IPEndPoint sender = new IPEndPoint(IPAddress.IPv6Any, 0);
             EndPoint senderRemote = (EndPoint)sender;
-            s.ReceiveTimeout = _timeout;
+            _server.ReceiveTimeout = _timeout;
 
             while (true)
             {
@@ -79,7 +78,7 @@ namespace NETLab1Server
                     {
                         try
                         {
-                            bytesRec = s.ReceiveFrom(buffer, ref senderRemote);
+                            bytesRec = _server.ReceiveFrom(buffer, ref senderRemote);
                             data += Encoding.UTF8.GetString(buffer, 0, bytesRec);
                             if (data.ToString().IndexOf('}') > -1)
                                 break;
@@ -93,20 +92,23 @@ namespace NETLab1Server
                 }
                 catch (SocketException) { }
                 TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
-                if (!_receivers.Any(c => c.Item2.Equals(message.From)) && message != null)
+                if (message != null)
                 {
-                    _receivers.Add(senderRemote, message.From);
-                    Dispatcher.BeginInvoke(new Action(() => UserList.Items.Add(message.From)));
-                }
-                s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/confirmation " + message.Hash, _nick))), senderRemote);
-                if (message.Command.Key == "message")
-                {
-                    Dispatcher.BeginInvoke(new Action(() => History.Add(message)));
-                    foreach (var receiver in _receivers)
+                    if (!_receivers.Any(c => c.Item2.Equals(message.From)))
                     {
-                        //if (receiver.Item1 != senderRemote)
-                        if (receiver.Item1 != _receivers.FirstOrDefault(x => x.Item2 == message.From).Item1)
-                            SendMessage(message, receiver.Item1);
+                        _receivers.Add(senderRemote, message.From);
+                        Dispatcher.BeginInvoke(new Action(() => UserList.Items.Add(message.From)));
+                    }
+                    _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/confirmation " + message.Hash, _nick))), senderRemote);
+                    if (message.Command.Key == "message")
+                    {
+                        Dispatcher.BeginInvoke(new Action(() => History.Add(message)));
+                        var s = _receivers.FirstOrDefault(x => x.Item2 == message.From);
+                        foreach (var receiver in _receivers)
+                        {
+                            if (receiver != s)
+                                SendMessage(message, receiver.Item1);
+                        }
                     }
                 }
             }
