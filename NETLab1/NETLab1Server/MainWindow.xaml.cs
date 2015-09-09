@@ -92,13 +92,12 @@ namespace NETLab1Server
                     }
                 }
                 catch (SocketException) { }
-                Thread.Sleep(100);
+                //Thread.Sleep(100);
                 TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
                 if (!_receivers.Any(c => c.Item2.Contains(message.From)) && message != null)
                 {
                     _receivers.Add(senderRemote, message.From);
                     Dispatcher.BeginInvoke(new Action(() => UserList.Items.Add(message.From)));
-                    //s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new ConfirmationMessage(message.Hash, true))), senderRemote);
                     s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/confirmation " + message.Hash, "Admin"))), senderRemote);
                     foreach (var receiver in _receivers)
                     {
@@ -111,7 +110,7 @@ namespace NETLab1Server
 
         private TextMessage TextMessage(string to, string text)
         {
-            return new TextMessage(String.Format("\n {0} {1}: {2}", DateTime.Now, to, text), _nick);
+            return new TextMessage(text, to, _nick);
         }
 
         private void SendMessage(TextMessage message, EndPoint receiver)
