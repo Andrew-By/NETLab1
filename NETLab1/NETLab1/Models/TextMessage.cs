@@ -11,7 +11,7 @@ namespace NETLab1.Models
     public class TextMessage
     {
         [JsonConstructor]
-        public TextMessage(string text, string to, string from)
+        public TextMessage(string text, string from, string to)
         {
             this.Text = text;
             this.To = to;
