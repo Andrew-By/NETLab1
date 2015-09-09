@@ -223,5 +223,19 @@ namespace NETLab1Server
             }
         }
         #endregion
+
+        private void KickButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (UserListView.SelectedIndex > -1)
+            {
+                EndPoint user = _receivers[UserListView.SelectedIndex].Item1;
+                String message = GetMessage();
+                _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/kick " + message, _nick))), user);
+                String textMessage = String.Format("Пользователь {0} был исключён из чата.", _receivers[UserListView.SelectedIndex].Item2);
+                if (message != String.Empty)
+                    textMessage += " Причина: " + message;
+                SendAll(new TextMessage(textMessage, _nick));
+            }
+        }
     }
 }

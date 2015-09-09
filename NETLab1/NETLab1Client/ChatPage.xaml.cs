@@ -29,6 +29,7 @@ namespace NETLab1Client
             InitializeComponent();
             App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
             App.Socket.UserListUpdated += Socket_UserListUpdated;
+            App.Socket.Kicked += Socket_Kicked;
 
             foreach (String user in App.Socket.UserList)
                 UserList.Add(user);
@@ -40,7 +41,7 @@ namespace NETLab1Client
             get { return _history; }
             set
             {
-                if(value!=_history)
+                if (value != _history)
                 {
                     _history = value;
                     NotifyPropertyChanged("History");
@@ -76,8 +77,21 @@ namespace NETLab1Client
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 UserList.Clear();
-                foreach(String user in e)
+                foreach (String user in e)
                     UserList.Add(user);
+            }));
+        }
+
+        private void Socket_Kicked(object sender, string e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                MessageTextBox.IsEnabled = false;
+                SendButton.IsEnabled = false;
+                String message = "Вас исключили из чата.";
+                if (e != String.Empty)
+                    message += " Причина: " + e;
+                MessageBox.Show(message, "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }));
         }
 

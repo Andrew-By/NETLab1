@@ -56,7 +56,10 @@ namespace NETLab1.Models
                 if (Text.IndexOf('/') == 0)
                 {
                     String[] words = Text.Split(' ');
-                    return new KeyValuePair<string, string>(words[0].Substring(1), Text.Substring(words[0].Length + 1));
+                    if (words.Length > 1)
+                        return new KeyValuePair<string, string>(words[0].Substring(1), Text.Substring(words[0].Length + 1));
+                    else
+                        return new KeyValuePair<string, string>(words[0].Substring(1), String.Empty);
                 }
                 else
                 {
