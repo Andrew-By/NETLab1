@@ -30,9 +30,10 @@ namespace NETLab1Client
             App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
             App.Socket.UserListUpdated += Socket_UserListUpdated;
             App.Socket.Kicked += Socket_Kicked;
+            ChatRooms.Add(new ChatRoom());
 
             foreach (String user in App.Socket.UserList)
-                UserList.Add(user);
+                ChatRooms[0].UserList.Add(user);
         }
 
         public String ServerName
@@ -40,37 +41,12 @@ namespace NETLab1Client
             get { return App.Socket.ServerName; }
         }
 
-        public string ChatType
+        public ObservableCollection<ChatRoom> _chatRooms = new ObservableCollection<ChatRoom>();
+        public ObservableCollection<ChatRoom> ChatRooms
         {
-            get { return "Общий чат"; }
-        }
-
-        private ObservableCollection<TextMessage> _history = new ObservableCollection<TextMessage>();
-        public ObservableCollection<TextMessage> History
-        {
-            get { return _history; }
-            set
+            get
             {
-                if (value != _history)
-                {
-                    _history = value;
-                    NotifyPropertyChanged("History");
-                }
-            }
-        }
-
-        private ObservableCollection<String> _userList = new ObservableCollection<String>();
-
-        public ObservableCollection<String> UserList
-        {
-            get { return _userList; }
-            set
-            {
-                if (value != _userList)
-                {
-                    _userList = value;
-                    NotifyPropertyChanged("UserList");
-                }
+                return _chatRooms;
             }
         }
 
@@ -78,7 +54,7 @@ namespace NETLab1Client
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                History.Add(e);
+                ChatRooms[0].History.Add(e);
             }));
         }
 
@@ -86,9 +62,9 @@ namespace NETLab1Client
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                UserList.Clear();
+                ChatRooms[0].UserList.Clear();
                 foreach (String user in e)
-                    UserList.Add(user);
+                    ChatRooms[0].UserList.Add(user);
             }));
         }
 
@@ -119,7 +95,7 @@ namespace NETLab1Client
         private void SendMessage()
         {
             TextMessage message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
-            History.Add(message);
+            ChatRooms[0].History.Add(message);
             MessageTextBox.Text = String.Empty;
             App.Socket.SendMessageAsync(message.Text);
         }
