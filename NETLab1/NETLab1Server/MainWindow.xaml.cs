@@ -23,11 +23,12 @@ namespace NETLab1Server
         private const int _port = 4501;
         private const int _timeout = 2000;
         private const int _buffSize = 2048;
-        SocketPermission permission;
+        private SocketPermission permission;
         private Socket _server;
         private Thread _serverTh;
         private bool _paused = false;
         private TupleList<EndPoint, string> _receivers = new TupleList<EndPoint, string>();
+        private ObservableCollection<String> _userlist = new ObservableCollection<String>();
         private ObservableCollection<TextMessage> _history = new ObservableCollection<TextMessage>();
         private ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
         private ManualResetEvent _pauseEvent = new ManualResetEvent(true);
@@ -94,12 +95,16 @@ namespace NETLab1Server
                 TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
                 if (message != null)
                 {
+                    _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/confirmation " + message.Hash, _nick))), senderRemote);
                     if (!_receivers.Any(c => c.Item2.Equals(message.From)))
                     {
                         _receivers.Add(senderRemote, message.From);
-                        Dispatcher.BeginInvoke(new Action(() => UserList.Items.Add(message.From)));
+                        Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From)));
+                        foreach (var receiver in _receivers)
+                        {
+                            _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/userlist " + JsonConvert.SerializeObject(UserList), _nick))), receiver.Item1);
+                        }
                     }
-                    _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/confirmation " + message.Hash, _nick))), senderRemote);
                     if (message.Command.Key == "message")
                     {
                         Dispatcher.BeginInvoke(new Action(() => History.Add(message)));
@@ -177,6 +182,19 @@ namespace NETLab1Server
                 _pauseEvent.Set();
                 PauseButton.Content = "Приостановить";
                 SendAll(new TextMessage("Сервер возобновил работу.", _nick));
+            }
+        }
+
+        public ObservableCollection<String> UserList
+        {
+            get { return _userlist; }
+            set
+            {
+                if (value != _userlist)
+                {
+                    _userlist = value;
+                    NotifyPropertyChanged("UserList");
+                }
             }
         }
 
