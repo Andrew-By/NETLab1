@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,14 +9,6 @@ namespace NETLab1.Models
     /// </summary>
     public class TextMessage
     {
-        [JsonConstructor]
-        public TextMessage(string text, string from, string to)
-        {
-            this.Text = text;
-            this.To = to;
-            this.From = from;
-            this.SentTime = DateTime.Now;
-        }
 
         public TextMessage(string text, string from)
         {
@@ -30,11 +21,6 @@ namespace NETLab1.Models
         /// Текстовое содержимое
         /// </summary>
         public string Text { get; set; }
-
-        /// <summary>
-        /// Ник получателя (или null, если всем)
-        /// </summary>
-        public string To { get; set; }
 
         /// <summary>
         /// Ник отправителя
