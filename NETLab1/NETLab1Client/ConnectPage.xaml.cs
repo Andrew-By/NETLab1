@@ -100,7 +100,7 @@ namespace NETLab1Client
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                App.Socket.TextMessageRecieved -= Socket_MessageDelivered;
+                App.Socket.MessageDelivered -= Socket_MessageDelivered;
                 App.Socket.DeliveryFailed -= Socket_DeliveryFailed;
                 NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }));
