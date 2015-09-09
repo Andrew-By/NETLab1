@@ -52,10 +52,10 @@
             </ListView.ItemContainerStyle>
 
         </ListView>
-        <ListView Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Users, ElementName=Root}">
+        <ListView Grid.Column="1" Grid.Row="1" ItemsSource="{Binding UserList, ElementName=Root}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" />
+                    <TextBlock Text="It Works!" />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

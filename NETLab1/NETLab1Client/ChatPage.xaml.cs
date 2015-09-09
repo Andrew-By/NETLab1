@@ -45,16 +45,17 @@ namespace NETLab1Client
             }
         }
 
-        private ObservableCollection<String> _users = new ObservableCollection<String>();
-        public ObservableCollection<String> Users
+        private ObservableCollection<String> _userList = new ObservableCollection<String>();
+
+        public ObservableCollection<String> UserList
         {
-            get { return _users; }
+            get { return _userList; }
             set
             {
-                if (value != _users)
+                if (value != _userList)
                 {
-                    _users = value;
-                    NotifyPropertyChanged("Users");
+                    _userList = value;
+                    NotifyPropertyChanged("UserList");
                 }
             }
         }
@@ -69,7 +70,10 @@ namespace NETLab1Client
 
         private void Socket_UserListUpdated(object sender, List<string> e)
         {
-            Users = new ObservableCollection<string>(e);
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                UserList = new ObservableCollection<String>(e);
+            }));
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
