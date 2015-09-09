@@ -74,7 +74,7 @@ namespace NETLab1Client
             App.Socket = new UDPSocket(ServerTextBox.Text, int.Parse(PortTextBox.Text), NickTextBox.Text);
             try
             {
-                await App.Socket.SendMessageAsync("/nick " + NickTextBox.Text);
+                App.Socket.SendMessageAsync("/nick " + NickTextBox.Text);
                 NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }
             catch(Exception ex)

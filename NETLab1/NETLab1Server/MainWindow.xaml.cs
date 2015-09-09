@@ -98,7 +98,8 @@ namespace NETLab1Server
                 {
                     _receivers.Add(senderRemote, message.From);
                     Dispatcher.BeginInvoke(new Action(() => UserList.Items.Add(message.From)));
-                    s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new ConfirmationMessage(message.Hash, true))), senderRemote);
+                    //s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new ConfirmationMessage(message.Hash, true))), senderRemote);
+                    s.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/confirmation " + message.Hash, "Admin"))), senderRemote);
                     foreach (var receiver in _receivers)
                     {
                         if (receiver.Item1 != senderRemote)

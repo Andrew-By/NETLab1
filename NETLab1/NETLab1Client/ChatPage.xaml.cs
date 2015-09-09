@@ -72,7 +72,7 @@ namespace NETLab1Client
             TextMessage message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
             History.Add(message);
             MessageTextBox.Text = String.Empty;
-            await App.Socket.SendMessageAsync(message.Text);
+            App.Socket.SendMessageAsync(message.Text);
         }
     }
 }

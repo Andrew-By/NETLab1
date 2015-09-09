@@ -47,6 +47,25 @@ namespace NETLab1.Models
         public DateTime SentTime { get; set; }
 
         /// <summary>
+        /// Получает команду, отправленную в сообщение. Текстовое сообщение эквивалентно команде /message
+        /// </summary>
+        public KeyValuePair<String, String> Command
+        {
+            get
+            {
+                if (Text.IndexOf('/') == 0)
+                {
+                    String[] words = Text.Split(' ');
+                    return new KeyValuePair<string, string>(words[0].Substring(1), Text.Substring(words[0].Length + 1));
+                }
+                else
+                {
+                    return new KeyValuePair<string, string>("message", Text);
+                }
+            }
+        }
+
+        /// <summary>
         /// Контрольная сумма сообщения
         /// </summary>
         public string Hash

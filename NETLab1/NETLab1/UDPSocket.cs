@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NETLab1
@@ -40,6 +41,16 @@ namespace NETLab1
         /// </summary>
         private IPEndPoint _endPoint;
 
+        /// <summary>
+        /// Источник токенов для прерывания прослушивания вхожящих сообщений
+        /// </summary>
+        private CancellationTokenSource _listenCT;
+
+        /// <summary>
+        /// Список сообщений, ожидающих доставки c источниками токенов отмены
+        /// </summary>
+        private Dictionary<String, CancellationTokenSource> _pendingDelivery;
+
         private String _nick;
         /// <summary>
         /// Ник пользователя
@@ -48,12 +59,23 @@ namespace NETLab1
         {
             get { return _nick; }
         }
+
+        /// <summary>
+        /// Событие получения текстового сообщения
+        /// </summary>
+        public event EventHandler<TextMessage> TextMessageRecieved;
+
         public UDPSocket(String toServer, int toPort, string nick)
         {
             IPHostEntry hostEntry = Dns.GetHostEntry(toServer);
             _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
+            _socket.ReceiveTimeout = MAX_RETRY_TIMEOUT;
             _endPoint = new IPEndPoint(hostEntry.AddressList[0], toPort);
             _nick = nick;
+            _listenCT = new CancellationTokenSource();
+            _pendingDelivery = new Dictionary<String, CancellationTokenSource>();
+            CancellationToken ct = _listenCT.Token;
+            Task.Run(() => Listen(ct));
         }
 
         /// <summary>
@@ -62,85 +84,95 @@ namespace NETLab1
         /// <param name="toServer">Адрес или имя сервера</param>
         /// <param name="toPort">Порт</param>
         /// <param name="text">Текст сообщения</param>
-        public async Task SendMessageAsync(String text)
+        public void SendMessageAsync(String text)
         {
-            try
-            {
-                TextMessage message = new TextMessage(text, _nick);
-                Debug.WriteLine("Отправка сообщения {0}...", message.Hash);
+            TextMessage message = new TextMessage(text, Nick);
+            CancellationTokenSource cts = new CancellationTokenSource();
+            _pendingDelivery.Add(message.Hash, cts);
+            Task.Run(() => DeliverMessageAsync(message, cts.Token));
+        }
 
-                await DeliverMessageAsync(message);
-            }
-            catch
+        private void DeliverMessageAsync(TextMessage message, CancellationToken ct)
+        {
+            for (int i = 0; i < MAX_RETRY_COUNT; i++)
             {
-                throw;
+                if (ct.IsCancellationRequested)
+                    break;
+
+                Debug.WriteLine("Попытка {0} из {1}...", i + 1, MAX_RETRY_COUNT);
+                _socket.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), _endPoint);
+                Debug.WriteLine("Сообщение {0} отправлено, ожидается подтверждение...", message.Hash);
+                Thread.Sleep(MAX_RETRY_TIMEOUT);
+            }
+
+            if (!ct.IsCancellationRequested)
+            {
+                Debug.WriteLine("Не удалось доставить сообщение {0}!", message.Hash);
+                _pendingDelivery.Remove(message.Hash);
             }
         }
 
-        private async Task DeliverMessageAsync(TextMessage message)
+        private void Listen(CancellationToken ct)
         {
-            bool delivered = false;
-
-            await Task.Run(() =>
+            while (!ct.IsCancellationRequested)
             {
-                for (int i = 0; i < MAX_RETRY_COUNT; i++)
-                {
-                    Debug.WriteLine("Попытка {0} из {1}...", i + 1, MAX_RETRY_COUNT);
-                    _socket.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), _endPoint);
-                    Debug.WriteLine("Сообщение {0} отправлено, ожидается подтверждение...", message.Hash);
-
-                    Task confirmation = new Task(() => WaitForConfirmation(_socket, message.Hash));
-                    confirmation.Start();
-                    if (confirmation.Wait(MAX_RETRY_TIMEOUT))
-                    {
-                        Debug.WriteLine("Сообщение {0} доставлено!", message.Hash);
-                        delivered = true;
-                        break;
-                    }
-                    Debug.WriteLine("Превышен интервал ожидания доставки!");
-                }
-            });
-
-            if(!delivered)
-                throw new Exception("Превышен интервал ожидания доставки!");
-        }
-
-        private void WaitForConfirmation(Socket socket, String messageHash)
-        {
-            byte[] buffer = new byte[MAX_BUFF_SIZE];
-            StringBuilder textBuffer = new StringBuilder();
-            ConfirmationMessage cmessage = null;
-
-            do
-            {
-                do
+                byte[] buffer = new byte[MAX_BUFF_SIZE];
+                StringBuilder textBuffer = new StringBuilder();
+                while (textBuffer.ToString().IndexOf('}') == -1 && !ct.IsCancellationRequested)
                 {
                     try
                     {
-                        socket.Receive(buffer);
+                        int byteCount = _socket.Receive(buffer);
+                        Debug.WriteLine("Получено {0} байт", byteCount);
                         textBuffer.Append(Encoding.UTF8.GetString(buffer));
                     }
                     catch
                     {
-                        break;
-                        throw;
+                        textBuffer.Clear();
                     }
                 }
-                while (textBuffer.ToString().IndexOf('}') == -1);
+
+                Debug.WriteLine("Получен символ конца объекта, десериализация...");
                 try
                 {
-                    cmessage = JsonConvert.DeserializeObject(textBuffer.ToString(), typeof(ConfirmationMessage)) as ConfirmationMessage;
+                    TextMessage message = JsonConvert.DeserializeObject(textBuffer.ToString(), typeof(TextMessage)) as TextMessage;
+                    switch (message.Command.Key)
+                    {
+                        case "confirmation":
+                            Debug.WriteLine("Получено подтверждение!");
+                            if (_pendingDelivery.ContainsKey(message.Command.Value))
+                            {
+                                _pendingDelivery[message.Command.Value].Cancel();
+                                Debug.WriteLine("Сообщение {0} доставлено!", message.Command.Value);
+                            }
+                            break;
+                        case "message":
+                            Debug.WriteLine("Получено текстовое сообщение!");
+                            if (TextMessageRecieved != null) TextMessageRecieved(this, message);
+                            break;
+                        default:
+                            Debug.WriteLine("Получено сообщение неизвестного типа ({0})! Сообщение проигнорировано", message.Command.Key);
+                            break;
+                    }
                 }
                 catch
                 {
-                    cmessage = null;
+                    Debug.WriteLine("Получен объект неизвестного типа! Сообщение проигнорировано");
                 }
             }
-            while (cmessage == null || !(cmessage.MessageHash == messageHash && cmessage.Accepted));
         }
 
         public void Close()
         {
+            Debug.WriteLine("Отмена сообщений, ожидающих доставки...");
+            foreach (CancellationTokenSource cts in _pendingDelivery.Values)
+                cts.Cancel();
+
+            Debug.WriteLine("Отмена ожидания входящих сообщений...");
+            if (_listenCT != null)
+                _listenCT.Cancel();
+
+            Debug.WriteLine("Закрытие сокета...");
             _socket.Close();
         }
     }
