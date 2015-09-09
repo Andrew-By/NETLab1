@@ -99,7 +99,7 @@ namespace NETLab1Server
                     if (!_receivers.Any(c => c.Item2.Equals(message.From)))
                     {
                         _receivers.Add(senderRemote, message.From);
-                        Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From)));
+                        Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From))).Wait();
                         foreach (var receiver in _receivers)
                         {
                             _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/userlist " + JsonConvert.SerializeObject(UserList), _nick))), receiver.Item1);

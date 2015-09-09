@@ -29,6 +29,9 @@ namespace NETLab1Client
             InitializeComponent();
             App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
             App.Socket.UserListUpdated += Socket_UserListUpdated;
+
+            foreach (String user in App.Socket.UserList)
+                UserList.Add(user);
         }
 
         private ObservableCollection<TextMessage> _history = new ObservableCollection<TextMessage>();
@@ -72,7 +75,9 @@ namespace NETLab1Client
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                UserList = new ObservableCollection<String>(e);
+                UserList.Clear();
+                foreach(String user in e)
+                    UserList.Add(user);
             }));
         }
 

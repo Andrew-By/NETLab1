@@ -60,6 +60,12 @@ namespace NETLab1
             get { return _nick; }
         }
 
+        private List<String> _userList;
+        public List<String> UserList
+        {
+            get { return _userList; }
+        }
+
         /// <summary>
         /// Событие получения текстового сообщения
         /// </summary>
@@ -75,6 +81,7 @@ namespace NETLab1
             _socket.ReceiveTimeout = MAX_RETRY_TIMEOUT;
             _endPoint = new IPEndPoint(hostEntry.AddressList[0], toPort);
             _nick = nick;
+            _userList = new List<string>();
             _listenCT = new CancellationTokenSource();
             _pendingDelivery = new Dictionary<String, CancellationTokenSource>();
             CancellationToken ct = _listenCT.Token;
@@ -157,7 +164,8 @@ namespace NETLab1
                             break;
                         case "userlist":
                             Debug.WriteLine("Получен список пользователей!");
-                            if (UserListUpdated != null) UserListUpdated(this, JsonConvert.DeserializeObject(message.Command.Value, typeof(List<String>)) as List<String>);
+                            _userList = JsonConvert.DeserializeObject(message.Command.Value, typeof(List<String>)) as List<String>;
+                            if (UserListUpdated != null) UserListUpdated(this, _userList);
                             break;
                         default:
                             Debug.WriteLine("Получено сообщение неизвестного типа ({0})! Сообщение проигнорировано", message.Command.Key);

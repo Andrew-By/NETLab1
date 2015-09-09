@@ -55,7 +55,7 @@
         <ListView Grid.Column="1" Grid.Row="1" ItemsSource="{Binding UserList, ElementName=Root}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="It Works!" />
+                    <TextBlock Text="{Binding}" />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
