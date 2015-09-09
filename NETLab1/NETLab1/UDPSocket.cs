@@ -64,6 +64,8 @@ namespace NETLab1
         /// Событие получения текстового сообщения
         /// </summary>
         public event EventHandler<TextMessage> TextMessageRecieved;
+        public event EventHandler<TextMessage> MessageDelivered;
+        public event EventHandler<TextMessage> DeliveryFailed;
 
         public UDPSocket(String toServer, int toPort, string nick)
         {
@@ -107,6 +109,7 @@ namespace NETLab1
 
             if (!ct.IsCancellationRequested)
             {
+                if (DeliveryFailed != null) DeliveryFailed(this, message);
                 Debug.WriteLine("Не удалось доставить сообщение {0}!", message.Hash);
                 _pendingDelivery.Remove(message.Hash);
             }
@@ -144,6 +147,7 @@ namespace NETLab1
                             {
                                 _pendingDelivery[message.Command.Value].Cancel();
                                 Debug.WriteLine("Сообщение {0} доставлено!", message.Command.Value);
+                                if (MessageDelivered != null) MessageDelivered(this, message);
                             }
                             break;
                         case "message":

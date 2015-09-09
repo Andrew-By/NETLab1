@@ -27,6 +27,7 @@ namespace NETLab1Client
         public ChatPage()
         {
             InitializeComponent();
+            App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
         }
 
         private ObservableCollection<TextMessage> _history = new ObservableCollection<TextMessage>();
@@ -43,9 +44,31 @@ namespace NETLab1Client
             }
         }
 
-        private async void SendButton_Click(object sender, RoutedEventArgs e)
+        private void Socket_TextMessageRecieved(object sender, TextMessage e)
         {
-            await SendMessageAsync();
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                History.Add(e);
+            }));
+        }
+
+        private void SendButton_Click(object sender, RoutedEventArgs e)
+        {
+            SendMessage();
+        }
+
+        private void MessageTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                SendMessage();
+        }
+
+        private void SendMessage()
+        {
+            TextMessage message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
+            History.Add(message);
+            MessageTextBox.Text = String.Empty;
+            App.Socket.SendMessageAsync(message.Text);
         }
 
         #region INotify
@@ -61,18 +84,5 @@ namespace NETLab1Client
         }
         #endregion
 
-        private async void MessageTextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-                await SendMessageAsync();
-        }
-
-        private async Task SendMessageAsync()
-        {
-            TextMessage message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
-            History.Add(message);
-            MessageTextBox.Text = String.Empty;
-            App.Socket.SendMessageAsync(message.Text);
-        }
     }
 }

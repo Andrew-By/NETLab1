@@ -63,7 +63,7 @@ namespace NETLab1Client
             ValidateInput();
         }
 
-        private async void ConnectButton_Click(object sender, RoutedEventArgs e)
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             ServerTextBox.IsEnabled = false;
             PortTextBox.IsEnabled = false;
@@ -72,21 +72,38 @@ namespace NETLab1Client
             ConnectingProgressBar.Visibility = Visibility.Visible;
 
             App.Socket = new UDPSocket(ServerTextBox.Text, int.Parse(PortTextBox.Text), NickTextBox.Text);
-            try
+
+            App.Socket.SendMessageAsync("/nick " + NickTextBox.Text);
+            App.Socket.MessageDelivered += Socket_MessageDelivered;
+            App.Socket.DeliveryFailed += Socket_DeliveryFailed;
+
+
+        }
+
+        private void Socket_DeliveryFailed(object sender, TextMessage e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                App.Socket.SendMessageAsync("/nick " + NickTextBox.Text);
-                NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
-            }
-            catch(Exception ex)
-            {
-                App.Socket.Close();
                 ServerTextBox.IsEnabled = true;
                 PortTextBox.IsEnabled = true;
                 NickTextBox.IsEnabled = true;
                 ConnectButton.IsEnabled = true;
                 ConnectingProgressBar.Visibility = Visibility.Hidden;
+
+                App.Socket.MessageDelivered -= Socket_MessageDelivered;
+                App.Socket.DeliveryFailed -= Socket_DeliveryFailed;
                 MessageBox.Show("Не удалось подключиться к серверу", "Произошла ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            }));
+        }
+
+        private void Socket_MessageDelivered(object sender, TextMessage e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                App.Socket.TextMessageRecieved -= Socket_MessageDelivered;
+                App.Socket.DeliveryFailed -= Socket_DeliveryFailed;
+                NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
+            }));
         }
     }
 }
