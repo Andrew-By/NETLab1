@@ -77,7 +77,14 @@ namespace NETLab1Client
             App.Socket.MessageDelivered += Socket_MessageDelivered;
             App.Socket.DeliveryFailed += Socket_DeliveryFailed;
 
+            App.Current.Exit += Current_Exit;
 
+
+        }
+
+        private void Current_Exit(object sender, ExitEventArgs e)
+        {
+            App.Socket.Close();
         }
 
         private void Socket_DeliveryFailed(object sender, TextMessage e)
