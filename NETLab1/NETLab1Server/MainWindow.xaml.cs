@@ -109,13 +109,20 @@ namespace NETLab1Server
                             }
                             else
                             {
-                                var oldUser = _receivers.FirstOrDefault(x => x.Item2 == message.From);
-                                var newUser = new Tuple<EndPoint, string>(oldUser.Item1, message.Command.Value);
-                                _receivers.Remove(oldUser);
-                                _receivers.Add(newUser);
-                                Dispatcher.BeginInvoke(new Action(() => { UserList.Add(newUser.Item2); UserList.Remove(oldUser.Item2); })).Wait();
-                                SendAll(new TextMessage(String.Format("Пользователь {0} сменил ник на {1}.", oldUser.Item2, newUser.Item2), _nick));
-                                SendUserList();
+                                if (_receivers.Any(c => c.Item1.Equals(senderRemote)))
+                                {
+                                    var oldUser = _receivers.FirstOrDefault(x => x.Item2 == message.From);
+                                    var newUser = new Tuple<EndPoint, string>(oldUser.Item1, message.Command.Value);
+                                    _receivers.Remove(oldUser);
+                                    _receivers.Add(newUser);
+                                    Dispatcher.BeginInvoke(new Action(() => { UserList.Add(newUser.Item2); UserList.Remove(oldUser.Item2); })).Wait();
+                                    SendAll(new TextMessage(String.Format("Пользователь {0} сменил ник на {1}.", oldUser.Item2, newUser.Item2), _nick));
+                                    SendUserList();
+                                }
+                                else
+                                {
+                                    Send(new TextMessage("/error Пользователь с таким ником уже существует.", _nick), senderRemote);
+                                }
                             }
                             break;
                         case "message":
