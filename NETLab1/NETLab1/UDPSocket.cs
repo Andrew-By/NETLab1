@@ -159,7 +159,7 @@ namespace NETLab1
                     switch (message.Command.Key)
                     {
                         case "confirmation":
-                            Debug.WriteLine("Получено подтверждение!");
+                            Debug.WriteLine("Получено подтверждение! ({0})", message.Command.Value);
                             if (_pendingDelivery.ContainsKey(message.Command.Value))
                             {
                                 _pendingDelivery[message.Command.Value].Cancel();
