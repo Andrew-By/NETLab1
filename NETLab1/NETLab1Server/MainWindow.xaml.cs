@@ -96,20 +96,22 @@ namespace NETLab1Server
                 TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
                 if (message != null)
                 {
-                    if (message.Command.Key != "confirmation")
-                        Send(new TextMessage("/confirmation " + message.Hash, _nick), senderRemote);
-                    switch (message.Command.Key)
+                    if (_receivers.Any(c => c.Item2.Equals(message.From)) && !_receivers.Any(c => c.Item1.Equals(senderRemote)))
+                        Send(new TextMessage("/error Пользователь с таким ником уже существует.", _nick), senderRemote);
+                    else
                     {
-                        case "nick":
-                            if (!_receivers.Any(c => c.Item2.Equals(message.From)))
-                            {
-                                _receivers.Add(senderRemote, message.From);
-                                Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From))).Wait();
-                                SendUserList();
-                            }
-                            else
-                            {
-                                if (_receivers.Any(c => c.Item1.Equals(senderRemote)))
+                        if (message.Command.Key != "confirmation")
+                            Send(new TextMessage("/confirmation " + message.Hash, _nick), senderRemote);
+                        switch (message.Command.Key)
+                        {
+                            case "nick":
+                                if (!_receivers.Any(c => c.Item2.Equals(message.From)))
+                                {
+                                    _receivers.Add(senderRemote, message.From);
+                                    Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From))).Wait();
+                                    SendUserList();
+                                }
+                                else
                                 {
                                     var oldUser = _receivers.FirstOrDefault(x => x.Item2 == message.From);
                                     var newUser = new Tuple<EndPoint, string>(oldUser.Item1, message.Command.Value);
@@ -118,32 +120,29 @@ namespace NETLab1Server
                                     Dispatcher.BeginInvoke(new Action(() => { UserList.Add(newUser.Item2); UserList.Remove(oldUser.Item2); })).Wait();
                                     SendAll(new TextMessage(String.Format("Пользователь {0} сменил ник на {1}.", oldUser.Item2, newUser.Item2), _nick));
                                     SendUserList();
+
                                 }
+                                break;
+                            case "message":
+                                SendAllExcept(message);
+                                break;
+                            case "private":
+                                Send(message, _receivers.FirstOrDefault(x => x.Item2 == message.Command.Value.Split(' ')[0]).Item1);
+                                break;
+                            case "exit":
+                                if (message.Command.Value == string.Empty)
+                                    message.Text = String.Format("Пользователь {0} покинул комнату.", message.From);
                                 else
-                                {
-                                    Send(new TextMessage("/error Пользователь с таким ником уже существует.", _nick), senderRemote);
-                                }
-                            }
-                            break;
-                        case "message":
-                            SendAllExcept(message);
-                            break;
-                        case "private":
-                            Send(message, _receivers.FirstOrDefault(x => x.Item2 == message.Command.Value.Split(' ')[0]).Item1);
-                            break;
-                        case "exit":
-                            if (message.Command.Value == string.Empty)
-                                message.Text = String.Format("Пользователь {0} покинул комнату.", message.From);
-                            else
-                                message.Text = String.Format("Пользователь {0} покинул комнату с сообщением: {1}.", message.From, message.Command.Value);
-                            SendAllExcept(message);
-                            _receivers.Remove(_receivers.FirstOrDefault(x => x.Item2 == message.From));
-                            Dispatcher.BeginInvoke(new Action(() => UserList.Remove(message.From))).Wait();
-                            SendUserList();
-                            break;
-                        default:
-                            Debug.Write("Поступило необрабатываемое сообщение: {0}", message.Text);
-                            break;
+                                    message.Text = String.Format("Пользователь {0} покинул комнату с сообщением: {1}.", message.From, message.Command.Value);
+                                SendAllExcept(message);
+                                _receivers.Remove(_receivers.FirstOrDefault(x => x.Item2 == message.From));
+                                Dispatcher.BeginInvoke(new Action(() => UserList.Remove(message.From))).Wait();
+                                SendUserList();
+                                break;
+                            default:
+                                Debug.Write("Поступило необрабатываемое сообщение: {0}", message.Text);
+                                break;
+                        }
                     }
                 }
             }
