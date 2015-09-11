@@ -151,7 +151,8 @@ namespace NETLab1Server
 
         private void Send(TextMessage message, EndPoint remote)
         {
-            _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), remote);
+            if (remote != null)
+                _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), remote);
         }
 
         private void SendAllExcept(TextMessage message)
