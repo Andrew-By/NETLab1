@@ -114,7 +114,7 @@ namespace NETLab1Server
                                 _receivers.Remove(oldUser);
                                 _receivers.Add(newUser);
                                 Dispatcher.BeginInvoke(new Action(() => { UserList.Add(newUser.Item2); UserList.Remove(oldUser.Item2); })).Wait();
-                                SendAll(new TextMessage(String.Format("Пользователь {0} сменил ник {1}.", oldUser.Item2, newUser.Item2), _nick));
+                                SendAll(new TextMessage(String.Format("Пользователь {0} сменил ник на {1}.", oldUser.Item2, newUser.Item2), _nick));
                                 SendUserList();
                             }
                             break;
@@ -122,11 +122,13 @@ namespace NETLab1Server
                             SendAllExcept(message);
                             break;
                         case "private":
-                            Send(message, _receivers.FirstOrDefault(x => x.Item2 == message.Command.Key.Split(':').ElementAt(1)).Item1);
+                            Send(message, _receivers.FirstOrDefault(x => x.Item2 == message.Command.Key.Split(' ').ElementAt(1)).Item1);
                             break;
                         case "exit":
-                            if (message.Command.Value != string.Empty)
+                            if (message.Command.Value == string.Empty)
                                 message.Text = String.Format("Пользователь {0} покинул комнату.", message.From);
+                            else
+                                message.Text = String.Format("Пользователь {0} покинул комнату с сообщением: {1}.", message.From, message.Command.Value);
                             SendAllExcept(message);
                             _receivers.Remove(_receivers.FirstOrDefault(x => x.Item2 == message.From));
                             Dispatcher.BeginInvoke(new Action(() => UserList.Remove(message.From))).Wait();
@@ -158,7 +160,7 @@ namespace NETLab1Server
 
         private void SendAll(TextMessage message)
         {
-            History.Add(message);
+            Dispatcher.BeginInvoke(new Action(() => History.Add(message)));
             foreach (var receiver in _receivers)
                 Send(message, receiver.Item1);
         }
