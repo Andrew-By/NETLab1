@@ -122,7 +122,7 @@ namespace NETLab1Server
                             SendAllExcept(message);
                             break;
                         case "private":
-                            Send(message, _receivers.FirstOrDefault(x => x.Item2 == message.Command.Key.Split(' ').ElementAt(1)).Item1);
+                            Send(message, _receivers.FirstOrDefault(x => x.Item2 == message.Command.Value.Split(' ')[0]).Item1);
                             break;
                         case "exit":
                             if (message.Command.Value == string.Empty)
