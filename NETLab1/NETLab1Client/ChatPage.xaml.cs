@@ -30,12 +30,28 @@ namespace NETLab1Client
             App.Current.Exit += Current_Exit;
             App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
             App.Socket.MessageDelivered += Socket_MessageDelivered;
+            App.Socket.DeliveryFailed += Socket_DeliveryFailed;
             App.Socket.UserListUpdated += Socket_UserListUpdated;
             App.Socket.Kicked += Socket_Kicked;
             ChatRooms.Add(new ChatRoom());
 
             foreach (String user in App.Socket.UserList)
                 ChatRooms[0].UserList.Add(user);
+        }
+
+        private void Socket_DeliveryFailed(object sender, TextMessage e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var room in ChatRooms)
+                {
+                    foreach (var message in room.History)
+                    {
+                        message.Delivered = true;
+                    }
+                }
+                MessageBox.Show("Потеряно соединение с сервером!", "Ошибка подключения", MessageBoxButton.OK, MessageBoxImage.Error);
+            }));
         }
 
         private void Socket_MessageDelivered(object sender, TextMessage e)
@@ -125,28 +141,31 @@ namespace NETLab1Client
 
         private void SendMessage()
         {
-            ChatRoom activeRoom = ChatRooms[ChatRoomsTabControl.SelectedIndex];
-            TextMessage message = null;
-            if (activeRoom.IsPublic)
+            if(MessageTextBox.Text!=String.Empty)
             {
-                message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
-                App.Socket.SendMessageAsync(message.Text);
-            }
-            else
-            {
-                message = new TextMessage(String.Format("/private {0} {1}", activeRoom.Name, MessageTextBox.Text), App.Socket.Nick);
-                App.Socket.SendMessageAsync(message.Text);
-                message.Text = message.Command.Value.Substring(message.Command.Value.IndexOf(' ') + 1);
-            }
-            if (message.Command.Key == "nick")
-                App.Socket.Nick = message.Command.Value;
-            MessageTextBox.Text = String.Empty;
-            activeRoom.History.Add(message);
-            if (message.Command.Key == "exit")
-            {
-                App.Current.Exit -= Current_Exit;
-                App.Socket.Close();
-                Application.Current.Shutdown();
+                ChatRoom activeRoom = ChatRooms[ChatRoomsTabControl.SelectedIndex];
+                TextMessage message = null;
+                if (activeRoom.IsPublic)
+                {
+                    message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
+                    App.Socket.SendMessageAsync(message.Text);
+                }
+                else
+                {
+                    message = new TextMessage(String.Format("/private {0} {1}", activeRoom.Name, MessageTextBox.Text), App.Socket.Nick);
+                    App.Socket.SendMessageAsync(message.Text);
+                    message.Text = message.Command.Value.Substring(message.Command.Value.IndexOf(' ') + 1);
+                }
+                if (message.Command.Key == "nick")
+                    App.Socket.Nick = message.Command.Value;
+                MessageTextBox.Text = String.Empty;
+                activeRoom.History.Add(message);
+                if (message.Command.Key == "exit")
+                {
+                    App.Current.Exit -= Current_Exit;
+                    App.Socket.Close();
+                    Application.Current.Shutdown();
+                }
             }
         }
 

@@ -76,17 +76,13 @@ namespace NETLab1Client
             App.Socket.SendMessageAsync("/nick " + NickTextBox.Text);
             App.Socket.MessageDelivered += Socket_MessageDelivered;
             App.Socket.DeliveryFailed += Socket_DeliveryFailed;
+            App.Socket.Error += Socket_Error;
             App.Current.Exit += Current_Exit;
 
 
         }
 
-        private void Current_Exit(object sender, ExitEventArgs e)
-        {
-            App.Socket.Close();
-        }
-
-        private void Socket_DeliveryFailed(object sender, TextMessage e)
+        private void Socket_Error(object sender, string e)
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -98,9 +94,20 @@ namespace NETLab1Client
 
                 App.Socket.MessageDelivered -= Socket_MessageDelivered;
                 App.Socket.DeliveryFailed -= Socket_DeliveryFailed;
+                App.Socket.Error -= Socket_Error;
                 App.Current.Exit -= Current_Exit;
-                MessageBox.Show("Не удалось подключиться к серверу", "Произошла ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(e, "Произошла ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }));
+        }
+
+        private void Current_Exit(object sender, ExitEventArgs e)
+        {
+            App.Socket.Close();
+        }
+
+        private void Socket_DeliveryFailed(object sender, TextMessage e)
+        {
+            Socket_Error(this, "Не удалось подключиться к серверу");
         }
 
         private void Socket_MessageDelivered(object sender, TextMessage e)
@@ -109,6 +116,7 @@ namespace NETLab1Client
             {
                 App.Socket.MessageDelivered -= Socket_MessageDelivered;
                 App.Socket.DeliveryFailed -= Socket_DeliveryFailed;
+                App.Socket.Error -= Socket_Error;
                 App.Current.Exit -= Current_Exit;
                 NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }));

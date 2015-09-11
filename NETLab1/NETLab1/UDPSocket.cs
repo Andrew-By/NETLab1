@@ -81,6 +81,7 @@ namespace NETLab1
         public event EventHandler<TextMessage> DeliveryFailed;
         public event EventHandler<List<String>> UserListUpdated;
         public event EventHandler<String> Kicked;
+        public event EventHandler<String> Error;
 
         public UDPSocket(String toServer, int toPort, string nick)
         {
@@ -181,6 +182,10 @@ namespace NETLab1
                         case "kick":
                             Debug.WriteLine("Вас выгнали!");
                             if (Kicked != null) Kicked(this, message.Command.Value);
+                            break;
+                        case "error":
+                            Debug.WriteLine("Произошла ошибка: {0}", message.Command.Value);
+                            if (Error != null) Error(this, message.Command.Value);
                             break;
                         default:
                             Debug.WriteLine("Получено сообщение неизвестного типа ({0})! Сообщение проигнорировано", message.Command.Key);
