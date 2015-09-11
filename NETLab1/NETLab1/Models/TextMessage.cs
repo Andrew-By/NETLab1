@@ -13,10 +13,13 @@ namespace NETLab1.Models
 
         public TextMessage(string text, string from)
         {
+            Random rand = new Random();
+
             this.Text = text;
             this.From = from;
             this.SentTime = DateTime.Now;
             this.Delivered = false;
+            this._hash = rand.Next().ToString();
         }
 
         private string _text;
@@ -93,12 +96,15 @@ namespace NETLab1.Models
             }
         }
 
+        private string _hash;
+
         /// <summary>
         /// Контрольная сумма сообщения
         /// </summary>
         public string Hash
         {
-            get { return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text)); }
+            //get { return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text)); }
+            get { return _hash; }
         }
 
         private bool _delivered;

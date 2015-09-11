@@ -81,6 +81,7 @@ namespace NETLab1Client
                         activeRoom = new ChatRoom(e.From);
                         ChatRooms.Add(activeRoom);
                     }
+                    e.Text = e.Command.Value.Substring(e.Command.Value.IndexOf(' ') + 1);
                 }
                 activeRoom.History.Add(e);
             }));
@@ -125,12 +126,17 @@ namespace NETLab1Client
             ChatRoom activeRoom = ChatRooms[ChatRoomsTabControl.SelectedIndex];
             TextMessage message = null;
             if (activeRoom.IsPublic)
+            {
                 message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
+                App.Socket.SendMessageAsync(message.Text);
+            }
             else
-                message = new TextMessage(String.Format("/private:{0} {1}", activeRoom.Name, MessageTextBox.Text), App.Socket.Nick);
+            {
+                message = new TextMessage(String.Format("/private {0} {1}", activeRoom.Name, MessageTextBox.Text), App.Socket.Nick);
+                App.Socket.SendMessageAsync(message.Text);
+                message.Text = message.Command.Value.Substring(message.Command.Value.IndexOf(' ') + 1);
+            }
             activeRoom.History.Add(message);
-            MessageTextBox.Text = String.Empty;
-            App.Socket.SendMessageAsync(message.Text);
             if (message.Command.Key == "exit")
             {
                 App.Current.Exit -= Current_Exit;
