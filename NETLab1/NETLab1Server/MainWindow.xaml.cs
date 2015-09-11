@@ -78,62 +78,97 @@ namespace NETLab1Server
                 if (_shutdownEvent.WaitOne(0))
                     break;
                 data = String.Empty;
-                try
+                while (true)
                 {
-                    while (true)
+                    try
                     {
-                        try
-                        {
-                            bytesRec = _server.ReceiveFrom(buffer, ref senderRemote);
-                            data += Encoding.UTF8.GetString(buffer, 0, bytesRec);
-                            if (data.ToString().IndexOf('}') > -1)
-                                break;
-                        }
-                        catch (SocketException)
-                        {
-                            if (_shutdownEvent.WaitOne(0))
-                                break;
-                        }
+                        bytesRec = _server.ReceiveFrom(buffer, ref senderRemote);
+                        data += Encoding.UTF8.GetString(buffer, 0, bytesRec);
+                        if (data.ToString().IndexOf('}') > -1)
+                            break;
+                    }
+                    catch (SocketException)
+                    {
+                        if (_shutdownEvent.WaitOne(0))
+                            break;
                     }
                 }
-                catch (SocketException) { }
                 TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
                 if (message != null)
                 {
-                    _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/confirmation " + message.Hash, _nick))), senderRemote);
-                    if (!_receivers.Any(c => c.Item2.Equals(message.From)))
+                    if (message.Command.Key != "confirmation")
+                        Send(new TextMessage("/confirmation " + message.Hash, _nick), senderRemote);
+                    switch (message.Command.Key)
                     {
-                        _receivers.Add(senderRemote, message.From);
-                        Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From))).Wait();
-                        foreach (var receiver in _receivers)
-                        {
-                            _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/userlist " + JsonConvert.SerializeObject(UserList), _nick))), receiver.Item1);
-                        }
-                    }
-                    if (message.Command.Key == "message")
-                    {
-                        Dispatcher.BeginInvoke(new Action(() => History.Add(message)));
-                        var s = _receivers.FirstOrDefault(x => x.Item2 == message.From);
-                        foreach (var receiver in _receivers)
-                        {
-                            if (receiver != s)
-                                SendMessage(message, receiver.Item1);
-                        }
+                        case "nick":
+                            if (!_receivers.Any(c => c.Item2.Equals(message.From)))
+                            {
+                                _receivers.Add(senderRemote, message.From);
+                                Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From))).Wait();
+                                SendUserList();
+                            }
+                            else
+                            {
+                                var oldUser = _receivers.FirstOrDefault(x => x.Item2 == message.From);
+                                var newUser = new Tuple<EndPoint, string>(oldUser.Item1, message.Command.Value);
+                                _receivers.Remove(oldUser);
+                                _receivers.Add(newUser);
+                                Dispatcher.BeginInvoke(new Action(() => { UserList.Add(newUser.Item2); UserList.Remove(oldUser.Item2); })).Wait();
+                                SendAll(new TextMessage(String.Format("Пользователь {0} сменил ник {1}.", oldUser.Item2, newUser.Item2), _nick));
+                                SendUserList();
+                            }
+                            break;
+                        case "message":
+                            SendAllExcept(message);
+                            break;
+                        case "private":
+                            Send(message, _receivers.FirstOrDefault(x => x.Item2 == message.Command.Key.Split(':').ElementAt(1)).Item1);
+                            break;
+                        case "exit":
+                            if (message.Command.Value != string.Empty)
+                                message.Text = String.Format("Пользователь {0} покинул комнату.", message.From);
+                            SendAllExcept(message);
+                            _receivers.Remove(_receivers.FirstOrDefault(x => x.Item2 == message.From));
+                            Dispatcher.BeginInvoke(new Action(() => UserList.Remove(message.From))).Wait();
+                            SendUserList();
+                            break;
+                        default:
+                            Debug.Write("Поступило необрабатываемое сообщение: {0}", message.Text);
+                            break;
                     }
                 }
             }
         }
 
-        private void SendMessage(TextMessage message, EndPoint receiver)
+        private void Send(TextMessage message, EndPoint remote)
         {
-            _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), receiver);
+            _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)), remote);
+        }
+
+        private void SendAllExcept(TextMessage message)
+        {
+            Dispatcher.BeginInvoke(new Action(() => History.Add(message)));
+            var s = _receivers.FirstOrDefault(x => x.Item2 == message.From);
+            foreach (var receiver in _receivers)
+            {
+                if (receiver != s)
+                    Send(message, receiver.Item1);
+            }
         }
 
         private void SendAll(TextMessage message)
         {
             History.Add(message);
             foreach (var receiver in _receivers)
-                SendMessage(message, receiver.Item1);
+                Send(message, receiver.Item1);
+        }
+
+        private void SendUserList()
+        {
+            foreach (var receiver in _receivers)
+            {
+                Send(new TextMessage("/userlist " + JsonConvert.SerializeObject(UserList), _nick), receiver.Item1);
+            }
         }
 
         private string GetMessage()
@@ -160,6 +195,26 @@ namespace NETLab1Server
             CommandManager.InvalidateRequerySuggested();
         }
 
+        private void KickButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (UserListView.SelectedIndex > -1)
+            {
+                var user = _receivers[UserListView.SelectedIndex];
+                String message = GetMessage();
+                _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/kick " + message, _nick))), user.Item1);
+                _receivers.Remove(user);
+                UserList.Remove(user.Item2);
+                String textMessage = String.Format("Пользователь {0} был исключён из чата.", user.Item2);
+                if (message != String.Empty)
+                    textMessage += " Причина: " + message;
+                SendAll(new TextMessage(textMessage, _nick));
+            }
+        }
+
+        private void HelpButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Лабораторная работа №1 - сервер-клиентское приложение-чат на основе блокирующих сокетов протокола UDP.\nВыполнили студенты группы МП-45: Бычков А. и Еленский И.", "Разработчики", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+        }
 
         private void LaunchButton_Click(object sender, RoutedEventArgs e)
         {
@@ -207,25 +262,15 @@ namespace NETLab1Server
             _timer.Stop();
         }
 
-        private void KickButton_Click(object sender, RoutedEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
-            if (UserListView.SelectedIndex > -1)
-            {
-                var user = _receivers[UserListView.SelectedIndex];
-                String message = GetMessage();
-                _server.SendTo(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TextMessage("/kick " + message, _nick))), user.Item1);
-                _receivers.Remove(user);
-                UserList.Remove(user.Item2);
-                String textMessage = String.Format("Пользователь {0} был исключён из чата.", user.Item2);
-                if (message != String.Empty)
-                    textMessage += " Причина: " + message;
-                SendAll(new TextMessage(textMessage, _nick));
-            }
-        }
-
-        private void HelpButton_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Лабораторная работа №1 - сервер-клиентское приложение-чат на основе блокирующих сокетов протокола UDP.\nВыполнили студенты группы МП-45: Бычков А. и Еленский И.", "Разработчики", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            base.OnClosing(e);
+            _shutdownEvent.Set();
+            _pauseEvent.Set();
+            if (_serverTh.IsAlive)
+                _serverTh.Join();
+            if (_timer.IsEnabled)
+                _timer.Stop();
         }
 
         public ObservableCollection<String> UserList
