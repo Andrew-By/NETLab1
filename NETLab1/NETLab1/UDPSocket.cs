@@ -64,6 +64,7 @@ namespace NETLab1
         public String Nick
         {
             get { return _nick; }
+            set { _nick = value; }
         }
 
         private List<String> _userList;

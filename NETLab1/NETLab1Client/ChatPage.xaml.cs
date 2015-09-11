@@ -79,6 +79,8 @@ namespace NETLab1Client
                     if (activeRoom == null)
                     {
                         activeRoom = new ChatRoom(e.From);
+                        activeRoom.UserList.Add(App.Socket.Nick);
+                        activeRoom.UserList.Add(e.From);
                         ChatRooms.Add(activeRoom);
                     }
                     e.Text = e.Command.Value.Substring(e.Command.Value.IndexOf(' ') + 1);
@@ -136,6 +138,8 @@ namespace NETLab1Client
                 App.Socket.SendMessageAsync(message.Text);
                 message.Text = message.Command.Value.Substring(message.Command.Value.IndexOf(' ') + 1);
             }
+            if (message.Command.Key == "nick")
+                App.Socket.Nick = message.Command.Value;
             MessageTextBox.Text = String.Empty;
             activeRoom.History.Add(message);
             if (message.Command.Key == "exit")
@@ -153,6 +157,8 @@ namespace NETLab1Client
                 if ((sender as TextBlock).Text != App.Socket.Nick)
                 {
                     ChatRoom privateRoom = new ChatRoom((sender as TextBlock).Text);
+                    privateRoom.UserList.Add(App.Socket.Nick);
+                    privateRoom.UserList.Add((sender as TextBlock).Text);
                     ChatRooms.Add(privateRoom);
                 }
             }
