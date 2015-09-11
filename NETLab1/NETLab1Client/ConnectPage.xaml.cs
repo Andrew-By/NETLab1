@@ -112,5 +112,11 @@ namespace NETLab1Client
                 NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }));
         }
+
+        private void NickTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key==Key.Enter)
+                ConnectButton_Click(this, new RoutedEventArgs());
+        }
     }
 }

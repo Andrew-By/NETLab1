@@ -16,7 +16,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock Text="{Binding ServerName, ElementName=Root}" FontSize="28"  Margin="5,5,0,0" />
-        <TabControl Grid.Row="1" ItemsSource="{Binding ChatRooms, ElementName=Root}">
+        <TabControl Name="ChatRoomsTabControl" Grid.Row="1" ItemsSource="{Binding ChatRooms, ElementName=Root}">
             <TabControl.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Name}" />
@@ -57,7 +57,7 @@
                         <ListView Grid.Column="1" ItemsSource="{Binding UserList}">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding}" />
+                                    <TextBlock Text="{Binding}" MouseLeftButtonDown="TextBlock_MouseLeftButtonDown" />
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>

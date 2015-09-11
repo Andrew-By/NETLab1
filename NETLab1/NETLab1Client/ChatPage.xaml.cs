@@ -94,10 +94,24 @@ namespace NETLab1Client
 
         private void SendMessage()
         {
-            TextMessage message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
-            ChatRooms[0].History.Add(message);
+            ChatRoom activeRoom = ChatRooms[ChatRoomsTabControl.SelectedIndex];
+            TextMessage message = null;
+            if (activeRoom.IsPublic)
+                message = new TextMessage(MessageTextBox.Text, App.Socket.Nick);
+            else
+                message = new TextMessage(String.Format("/private:{0} {1}", activeRoom.Name, MessageTextBox.Text), App.Socket.Nick);
+            activeRoom.History.Add(message);
             MessageTextBox.Text = String.Empty;
             App.Socket.SendMessageAsync(message.Text);
+        }
+
+        private void TextBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                ChatRoom privateRoom = new ChatRoom((sender as TextBlock).Text);
+                ChatRooms.Add(privateRoom);
+            }
         }
 
         #region INotify

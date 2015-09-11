@@ -11,11 +11,13 @@ namespace NETLab1.Models
         public ChatRoom(string name)
         {
             this.Name = name;
+            this.IsPublic = false;
         }
 
         public ChatRoom()
         {
             this.Name = "Общий чат";
+            this.IsPublic = true;
         }
         private string _name;
         public string Name
@@ -41,6 +43,20 @@ namespace NETLab1.Models
         public ObservableCollection<String> UserList
         {
             get { return _userList; }
+        }
+
+        private bool _isPublic;
+        public bool IsPublic
+        {
+            get { return _isPublic; }
+            set
+            {
+                if(value)
+                {
+                    _isPublic = value;
+                    NotifyPropertyChanged("IsPublic");
+                }
+            }
         }
         public override string ToString()
         {
