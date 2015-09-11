@@ -136,6 +136,7 @@ namespace NETLab1Client
                 App.Socket.SendMessageAsync(message.Text);
                 message.Text = message.Command.Value.Substring(message.Command.Value.IndexOf(' ') + 1);
             }
+            MessageTextBox.Text = String.Empty;
             activeRoom.History.Add(message);
             if (message.Command.Key == "exit")
             {
