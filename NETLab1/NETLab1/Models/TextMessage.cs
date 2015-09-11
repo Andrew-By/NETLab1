@@ -98,7 +98,7 @@ namespace NETLab1.Models
         /// </summary>
         public string Hash
         {
-            get { return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text)); }
+            get { return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text + SentTime.ToString())); }
         }
 
         private bool _delivered;
