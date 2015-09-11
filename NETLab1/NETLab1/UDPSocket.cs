@@ -167,6 +167,7 @@ namespace NETLab1
                             }
                             break;
                         case "message":
+                        case "private":
                             Debug.WriteLine("Получено текстовое сообщение!");
                             if (TextMessageRecieved != null) TextMessageRecieved(this, message);
                             break;

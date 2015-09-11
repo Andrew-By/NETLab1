@@ -76,7 +76,6 @@ namespace NETLab1Client
             App.Socket.SendMessageAsync("/nick " + NickTextBox.Text);
             App.Socket.MessageDelivered += Socket_MessageDelivered;
             App.Socket.DeliveryFailed += Socket_DeliveryFailed;
-
             App.Current.Exit += Current_Exit;
 
 
@@ -99,6 +98,7 @@ namespace NETLab1Client
 
                 App.Socket.MessageDelivered -= Socket_MessageDelivered;
                 App.Socket.DeliveryFailed -= Socket_DeliveryFailed;
+                App.Current.Exit -= Current_Exit;
                 MessageBox.Show("Не удалось подключиться к серверу", "Произошла ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }));
         }
@@ -109,6 +109,7 @@ namespace NETLab1Client
             {
                 App.Socket.MessageDelivered -= Socket_MessageDelivered;
                 App.Socket.DeliveryFailed -= Socket_DeliveryFailed;
+                App.Current.Exit -= Current_Exit;
                 NavigationService.Navigate(new Uri("ChatPage.xaml", UriKind.Relative));
             }));
         }

@@ -27,6 +27,7 @@ namespace NETLab1Client
         public ChatPage()
         {
             InitializeComponent();
+            App.Current.Exit += Current_Exit;
             App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
             App.Socket.UserListUpdated += Socket_UserListUpdated;
             App.Socket.Kicked += Socket_Kicked;
@@ -34,6 +35,12 @@ namespace NETLab1Client
 
             foreach (String user in App.Socket.UserList)
                 ChatRooms[0].UserList.Add(user);
+        }
+
+        private void Current_Exit(object sender, ExitEventArgs e)
+        {
+            App.Socket.SendMessageAsync("/exit" + MessageTextBox.Text);
+            App.Socket.Close();
         }
 
         public String ServerName
@@ -54,7 +61,17 @@ namespace NETLab1Client
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                ChatRooms[0].History.Add(e);
+                ChatRoom activeRoom = ChatRooms[0];
+                if (e.Command.Key.StartsWith("private"))
+                {
+                    activeRoom = ChatRooms.FirstOrDefault(x => x.Name == e.From);
+                    if (activeRoom == null)
+                    {
+                        activeRoom = new ChatRoom(e.From);
+                        ChatRooms.Add(activeRoom);
+                    }
+                }
+                activeRoom.History.Add(e);
             }));
         }
 
@@ -103,14 +120,23 @@ namespace NETLab1Client
             activeRoom.History.Add(message);
             MessageTextBox.Text = String.Empty;
             App.Socket.SendMessageAsync(message.Text);
+            if (message.Command.Key == "exit")
+            {
+                App.Current.Exit -= Current_Exit;
+                App.Socket.Close();
+                Application.Current.Shutdown();
+            }
         }
 
         private void TextBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
             {
-                ChatRoom privateRoom = new ChatRoom((sender as TextBlock).Text);
-                ChatRooms.Add(privateRoom);
+                if((sender as TextBlock).Text!=App.Socket.Nick)
+                {
+                    ChatRoom privateRoom = new ChatRoom((sender as TextBlock).Text);
+                    ChatRooms.Add(privateRoom);
+                }
             }
         }
 
