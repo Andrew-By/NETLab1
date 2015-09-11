@@ -8,7 +8,9 @@
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300"
       Title="ChatPage">
-
+    <Page.Resources>
+        <local:MessageStatusConverter x:Key="MessageStatusConverter" />
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -44,6 +46,7 @@
                                         </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" />
                                         <TextBlock Grid.Column="2" Text="{Binding SentTime}" Foreground="Gray" />
+                                        <ProgressBar Grid.Column="2" IsIndeterminate="True" Visibility="{Binding Delivered, Converter={StaticResource MessageStatusConverter}}" />
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>

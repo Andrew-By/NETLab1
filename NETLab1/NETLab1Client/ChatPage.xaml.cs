@@ -29,12 +29,23 @@ namespace NETLab1Client
             InitializeComponent();
             App.Current.Exit += Current_Exit;
             App.Socket.TextMessageRecieved += Socket_TextMessageRecieved;
+            App.Socket.MessageDelivered += Socket_MessageDelivered;
             App.Socket.UserListUpdated += Socket_UserListUpdated;
             App.Socket.Kicked += Socket_Kicked;
             ChatRooms.Add(new ChatRoom());
 
             foreach (String user in App.Socket.UserList)
                 ChatRooms[0].UserList.Add(user);
+        }
+
+        private void Socket_MessageDelivered(object sender, TextMessage e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ChatRoom activeRoom = ChatRooms.FirstOrDefault(x => x.History.Any(y => y.Hash == e.Command.Value));
+                    TextMessage message = activeRoom.History.FirstOrDefault(x => x.Hash == e.Command.Value);
+                    message.Delivered = true;
+                }));
         }
 
         private void Current_Exit(object sender, ExitEventArgs e)
@@ -132,7 +143,7 @@ namespace NETLab1Client
         {
             if (e.ClickCount == 2)
             {
-                if((sender as TextBlock).Text!=App.Socket.Nick)
+                if ((sender as TextBlock).Text != App.Socket.Nick)
                 {
                     ChatRoom privateRoom = new ChatRoom((sender as TextBlock).Text);
                     ChatRooms.Add(privateRoom);

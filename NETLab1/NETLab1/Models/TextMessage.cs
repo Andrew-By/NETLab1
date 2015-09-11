@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace NETLab1.Models
@@ -7,7 +8,7 @@ namespace NETLab1.Models
     /// <summary>
     /// Класс сообщения чата
     /// </summary>
-    public class TextMessage
+    public class TextMessage : INotifyPropertyChanged
     {
 
         public TextMessage(string text, string from)
@@ -15,22 +16,60 @@ namespace NETLab1.Models
             this.Text = text;
             this.From = from;
             this.SentTime = DateTime.Now;
+            this.Delivered = false;
         }
 
+        private string _text;
         /// <summary>
         /// Текстовое содержимое
         /// </summary>
-        public string Text { get; set; }
+        public string Text
+        {
+            get { return _text; }
+            set
+            {
+                if(value!=_text)
+                {
+                    _text = value;
+                    NotifyPropertyChanged("Text");
+                }
+            }
+        }
 
+        private string _from;
         /// <summary>
         /// Ник отправителя
         /// </summary>
-        public string From { get; set; }
+        public string From
+        {
+            get { return _from; }
+            set
+            {
+                if (value != _from)
+                {
+                    _from = value;
+                    NotifyPropertyChanged("From");
+                }
+            }
+        }
 
         /// <summary>
         /// Время отправки сообщения
         /// </summary>
-        public DateTime SentTime { get; set; }
+        /// 
+        private DateTime _sentTime;
+        public DateTime SentTime
+        {
+            get { return _sentTime; }
+            set
+            {
+                if(value!=_sentTime)
+                {
+                    _sentTime = value;
+                    NotifyPropertyChanged("SentTime");
+                }
+            }
+        }
 
         /// <summary>
         /// Получает команду, отправленную в сообщение. Текстовое сообщение эквивалентно команде /message
@@ -61,9 +100,37 @@ namespace NETLab1.Models
         {
             get { return Convert.ToBase64String(Encoding.UTF8.GetBytes(Text)); }
         }
+
+        private bool _delivered;
+        public bool Delivered
+        {
+            get { return _delivered; }
+            set
+            {
+                if(value!=_delivered)
+                {
+                    _delivered = value;
+                    NotifyPropertyChanged("Delivered");
+                }
+            }
+        }
+
         public override string ToString()
         {
             return Text;
         }
+
+        #region INotify
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this,
+                    new PropertyChangedEventArgs(propertyName));
+            }
+        }
+        #endregion
     }
 }

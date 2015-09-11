@@ -155,6 +155,7 @@ namespace NETLab1
                 try
                 {
                     TextMessage message = JsonConvert.DeserializeObject(textBuffer.ToString(), typeof(TextMessage)) as TextMessage;
+                    message.Delivered = true;
                     switch (message.Command.Key)
                     {
                         case "confirmation":
