@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace NETLab1
 {
@@ -89,7 +90,7 @@ namespace NETLab1
             _serverName = hostEntry.HostName;
             _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
             _socket.ReceiveTimeout = MAX_RETRY_TIMEOUT;
-            _endPoint = new IPEndPoint(hostEntry.AddressList[0], toPort);
+            _endPoint = new IPEndPoint(hostEntry.AddressList.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork), toPort);
             _nick = nick;
             _userList = new List<string>();
             _listenCT = new CancellationTokenSource();
