@@ -55,8 +55,8 @@ namespace NETLab1Server
         {
             permission = new SocketPermission(NetworkAccess.Accept, TransportType.Udp, "", _port);
             permission.Demand();
-            _server = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
-            _server.Bind(new IPEndPoint(IPAddress.IPv6Any, _port));
+            _server = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _server.Bind(new IPEndPoint(IPAddress.Any, _port));
             _server.Blocking = true;
             _serverTh = new Thread(Listen);
             _serverTh.Start();
@@ -68,7 +68,7 @@ namespace NETLab1Server
             byte[] buffer = new byte[_buffSize];
             String data;
 
-            IPEndPoint sender = new IPEndPoint(IPAddress.IPv6Any, 0);
+            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
             EndPoint senderRemote = (EndPoint)sender;
             _server.ReceiveTimeout = _timeout;
 
@@ -89,6 +89,7 @@ namespace NETLab1Server
                     }
                     catch (SocketException)
                     {
+                        _pauseEvent.WaitOne(Timeout.Infinite);
                         if (_shutdownEvent.WaitOne(0))
                             break;
                     }
@@ -110,6 +111,7 @@ namespace NETLab1Server
                                     _receivers.Add(senderRemote, message.From);
                                     Dispatcher.BeginInvoke(new Action(() => UserList.Add(message.From))).Wait();
                                     SendUserList();
+                                    SendAll(new TextMessage(String.Format("Приветствуем нового пользователя {0}.", message.From), _nick));
                                 }
                                 else
                                 {
