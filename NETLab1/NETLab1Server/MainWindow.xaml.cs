@@ -37,6 +37,7 @@ namespace NETLab1Server
         private DispatcherTimer _timer = new DispatcherTimer();
         private DateTime _startTime = new DateTime();
         private TimeSpan _offset = new TimeSpan(), _offsetG = new TimeSpan();
+        private String _previousMessage;
 
         public class TupleList<T1, T2> : List<Tuple<T1, T2>>
         {
@@ -95,8 +96,9 @@ namespace NETLab1Server
                     }
                 }
                 TextMessage message = JsonConvert.DeserializeObject(data, typeof(TextMessage)) as TextMessage;
-                if (message != null)
+                if (message != null && _previousMessage != message.Text)
                 {
+                    _previousMessage = message.Text;
                     if (_receivers.Any(c => c.Item2.Equals(message.From)) && !_receivers.Any(c => c.Item1.Equals(senderRemote)))
                         Send(new TextMessage("/error Пользователь с таким ником уже существует.", _nick), senderRemote);
                     else
@@ -122,7 +124,6 @@ namespace NETLab1Server
                                     Dispatcher.BeginInvoke(new Action(() => { UserList.Add(newUser.Item2); UserList.Remove(oldUser.Item2); })).Wait();
                                     SendAll(new TextMessage(String.Format("Пользователь {0} сменил ник на {1}.", oldUser.Item2, newUser.Item2), _nick));
                                     SendUserList();
-
                                 }
                                 break;
                             case "message":
