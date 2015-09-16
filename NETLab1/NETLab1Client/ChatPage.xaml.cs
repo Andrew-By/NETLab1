@@ -196,5 +196,12 @@ namespace NETLab1Client
         }
         #endregion
 
+        private void HelpButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChatRoom activeRoom = ChatRooms[ChatRoomsTabControl.SelectedIndex];
+            TextMessage message = new TextMessage("На сервере доступны следующие команды:\n/private [Пользователь] [Сообщение] - приватное сообщение\n/exit [Сообщение] - покинуть чат\n/nick [Имя] - смена ника", App.Socket.Nick);
+            message.Delivered = true;
+            activeRoom.History.Add(message);
+        }
     }
 }
